@@ -3,9 +3,12 @@
 #include <avr/sleep.h>
 #include <avr/delay.h>
 
+#include <stdlib.h>
+
 #include <spi.h>
 #include <nrf.h>
 #include <buttons.h>
+#include <uart.h>
 
 void init_buttons_pcint(void) {
 
@@ -43,10 +46,13 @@ int main(void) {
 
     init_buttons_pcint();
     
+    init_uart();
     init_spi();
     init_nrf();
 
     init_leds();
+
+    set_ce_low();
 
     while (1) {
 
@@ -56,9 +62,24 @@ int main(void) {
 
         if (is_button_pressed(0)) {
 
-            // TODO: Send packet through NRF
+            uint8_t data[NRF_CHANNEL_SIZE];
+            for (uint8_t i = 0; i < NRF_CHANNEL_SIZE; i++) data[i] = 0x55;
 
+            nrf_send_packet(data, NRF_CHANNEL_SIZE);
+
+            free(data);
+
+            PORTD |= (1 << PD5);
+
+            _delay_ms(500);
+
+            PORTD &= ~(1 << PD5);
+            
         };
+
+        nrf_clear_irq();
+
+        _delay_ms(100);
     
     }
 

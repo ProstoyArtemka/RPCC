@@ -2,26 +2,24 @@
 #include <avr/delay.h>
 
 void set_csn_low(void) { 
-    PORTB &= ~(1 << SPI_CS);
+    PORTD &= ~(1 << SPI_CS);
     
     _delay_us(2);
 }
 
 void set_csn_high(void) { 
-    PORTB |= (1 << SPI_CS); 
+    PORTD |= (1 << SPI_CS); 
     
     _delay_us(2);
 }
-
-
 
 
 void init_spi(void) {
 
     DDRB |= (1 << PB2); // SS for master-mode
 
-    DDRB |= (1 << SPI_CS); // SPI CS
-    PORTB |= (1 << SPI_CS); // Enable CS
+    DDRD |= (1 << SPI_CS); // SPI CS
+    PORTD |= (1 << SPI_CS); // Enable CS
 
     DDRB |= (1 << SPI_SCK) | (1 << SPI_MOSI); // Set outputs SCK, MOSI and Chip Select for SPI 
 
@@ -33,7 +31,6 @@ void init_spi(void) {
     SPSR &= ~(1 << SPI2X);
 
     SPCR &= ~((1 << CPOL) | (1 << CPHA)); // Spi mode 0
-    
 }
 
 uint8_t spi_transfer(uint8_t data) {
