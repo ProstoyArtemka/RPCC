@@ -48,11 +48,11 @@ int main(void) {
     init_nrf_interrupt();
     init_leds();
 
-    set_ce_high();
-    _delay_ms(5);
-
     nrf_flush_rx();
 
+    set_ce_high();
+    _delay_ms(5);
+    
     while (1) {
         
         init_sleep_mode(); // Enter sleep state
@@ -92,8 +92,5 @@ int main(void) {
 }
 
 ISR(PCINT2_vect) {
-
-
-    PCIFR |= (1 << PCIF2);
 
 }

@@ -54,6 +54,8 @@ int main(void) {
 
     set_ce_low();
 
+    uart_print("Start!");
+
     while (1) {
 
         init_sleep_mode(); // Enter sleep state
@@ -62,6 +64,8 @@ int main(void) {
 
         if (is_button_pressed(0)) {
 
+            PORTD |= (1 << PD5);
+
             uint8_t data[NRF_CHANNEL_SIZE];
             for (uint8_t i = 0; i < NRF_CHANNEL_SIZE; i++) data[i] = 0x55;
 
@@ -69,17 +73,10 @@ int main(void) {
 
             free(data);
 
-            PORTD |= (1 << PD5);
-
-            _delay_ms(500);
+            _delay_ms(100);
 
             PORTD &= ~(1 << PD5);
-            
         };
-
-        nrf_clear_irq();
-
-        _delay_ms(100);
     
     }
 
