@@ -1,7 +1,7 @@
 #include <avr/io.h>
 
 #define NRF_CE PD3 // Chip Enable for NRF
-#define NRF_IRQ PD4
+#define NRF_IRQ PD2
 #define NRF_CHANNEL 80
 #define NRF_CHANNEL_SIZE 8
 

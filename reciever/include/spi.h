@@ -1,6 +1,6 @@
 #include <avr/io.h>
 
-#define SPI_CS PD2 // Chip Select of SPI
+#define SPI_CS PD4 // Chip Select of SPI
 #define SPI_SCK PB5
 #define SPI_MISO PB4
 #define SPI_MOSI PB3
