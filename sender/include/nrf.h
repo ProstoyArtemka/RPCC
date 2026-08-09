@@ -1,6 +1,6 @@
 #include <avr/io.h>
 
-#define NRF_CE PB1 // Chip Enable for NRF
+#define NRF_CE PB1 // CE
 #define NRF_CHANNEL 80
 #define NRF_CHANNEL_SIZE 8
 

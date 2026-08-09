@@ -85,7 +85,7 @@ void nrf_flush_rx(void) {
 
 }
 
-void init_nrf(void) {
+void nrf_init(void) {
 
     DDRD |= (1 << NRF_CE);
 

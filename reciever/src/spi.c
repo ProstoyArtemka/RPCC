@@ -14,7 +14,7 @@ void set_csn_high(void) {
 }
 
 
-void init_spi(void) {
+void spi_init(void) {
 
     DDRB |= (1 << PB2); // SS for master-mode
 

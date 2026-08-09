@@ -1,6 +1,6 @@
 #include <avr/io.h>
 
-#define NRF_CE PD3 // Chip Enable for NRF
+#define NRF_CE PD3 // CE
 #define NRF_IRQ PD2
 #define NRF_CHANNEL 80
 #define NRF_CHANNEL_SIZE 8
@@ -38,10 +38,10 @@
 void set_ce_low(void);
 void set_ce_high(void);
 
+void nrf_init(void);
+
 void nrf_write_reg(uint8_t reg, uint8_t value);
 uint8_t nrf_read_reg(uint8_t reg);
 void nrf_send_packet(uint8_t* data, uint8_t size);
 void nrf_clear_irq(void);
 void nrf_flush_rx(void);
-
-void init_nrf(void);

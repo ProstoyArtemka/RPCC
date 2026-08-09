@@ -1,7 +1,7 @@
 #include <uart.h>
 #include <avr/io.h>
 
-void init_uart(void) {
+void uart_init(void) {
 
     UBRR0H = (unsigned char) (MYUBRR >> 8);
     UBRR0L = (unsigned char) (MYUBRR);
@@ -18,7 +18,14 @@ void uart_transmit(uint8_t data) {
     UDR0 = data;
 }
 
-void uart_print(const char* str) {
+uint8_t uart_recieve(void) {
+
+    while (!(UCSR0A & (1 << RXC0)));
+    
+    return UDR0;
+}
+
+void uart_print(const char *str) {
 
     while (*str) {
         uart_transmit(*str);

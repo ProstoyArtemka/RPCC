@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/delay.h>
+#include "string.h"
 
 #include <stdlib.h>
 
@@ -9,8 +10,9 @@
 #include <nrf.h>
 #include <uart.h>
 
+uint8_t connected_to_driver = 0;
 
-void init_nrf_interrupt(void) {
+void nrf_init_interrupt(void) {
 
     DDRD &= ~(1 << NRF_IRQ); // Enable input on IRQ
     PORTD |= (1 << NRF_IRQ); // Enable pull-up on IRQ
@@ -23,32 +25,61 @@ void init_nrf_interrupt(void) {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 }
 
-void init_leds(void) {
+void leds_init(void) {
 
     DDRD |= (1 << PD5);
     PORTD &= ~(1 << PD5);
 
 }
 
+void wait_till_driver_connects() {
+
+    if (connected_to_driver) return;
+
+    static char handshsake_message[] = "rpcc_handshake";
+    uint8_t handshake_length = sizeof(handshsake_message) - 1;
+
+    char recieved_buffer[15];
+    uint8_t recieved_bytes = 0;
+
+    while (recieved_bytes < handshake_length) recieved_buffer[recieved_bytes++] = uart_recieve();
+    recieved_buffer[recieved_bytes] = '\0';
+
+    if (strcmp(handshsake_message, recieved_buffer) != 0) return;
+
+    for (uint8_t i = 0; i < handshake_length; i++) uart_transmit(handshsake_message[i]);
+
+    PORTD |= (1 << PD5);
+    _delay_ms(1000);
+    PORTD &= ~(1 << PD5);
+
+    connected_to_driver = 1;
+}
+
 int main(void) {
 
-    init_uart();
-    init_spi();
-    init_nrf();
-    init_nrf_interrupt();
-    init_leds();
+    uart_init();
+    spi_init();
+    nrf_init();
+    nrf_init_interrupt();
+    leds_init();
 
     nrf_flush_rx();
 
     set_ce_high();
     _delay_ms(5);
-    
 
     uint8_t status = nrf_read_reg(NRF_STATUS_REGISTER);
     if (status == 0x27) uart_print("SPI is ok!");
 
     while (1) {
         
+        // Wait till driver recognizes device
+
+        wait_till_driver_connects();
+
+        // Now we can sleep
+
         sleep_enable(); // Enable sleep mode
         sleep_bod_disable(); // Disable low power detection
         sleep_cpu(); // Sleeping
@@ -70,12 +101,6 @@ int main(void) {
             }
 
             set_csn_high();
-
-            PORTD |= (1 << PD5);
-            _delay_ms(500);
-
-            PORTD &= ~(1 << PD5);
-            _delay_ms(500);
         }
 
         nrf_flush_rx();
