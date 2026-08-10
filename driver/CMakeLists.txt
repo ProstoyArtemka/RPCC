@@ -15,6 +15,7 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(raylib)
 
 include_directories(include)
+include_directories(libs)
 file(GLOB SOURCES "src/*.c")
 
 if (WIN32)
