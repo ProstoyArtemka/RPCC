@@ -8,7 +8,10 @@
 #include <uart.h>
 #include <graphics.h>
 
-RPCC_STATE *state;
+RPCCState state = (RPCCState) {
+    .is_rpcc_connected = false,
+    .rpcc_port = -1
+};
 
 bool is_hidden = false;
 void* window;
@@ -18,20 +21,20 @@ void rpcc_connected(int port) {
     update_tray_icon(window, true);
     show_tray_notification(window, "RPCC connected!", "Device connected and ready to work.");
 
-    state->rpcc_port = port;
-    state->is_rpcc_connected = true;
+    state.rpcc_port = port;
+    state.is_rpcc_connected = true;
 
 }
 
 void rpcc_disconnected(int port) {
 
-    if (port != state->rpcc_port) return;
+    if (port != state.rpcc_port) return;
 
     update_tray_icon(window, false);
     show_tray_notification(window, "RPCC disconnected!", "Device disconected.");
 
-    state->rpcc_port = -1;
-    state->is_rpcc_connected = false;
+    state.rpcc_port = -1;
+    state.is_rpcc_connected = false;
 }
 
 void tray_icon_pressed() {
@@ -78,20 +81,21 @@ void init_window(WINDOW_SUBCLASS_PARAMS *window_params) {
 
 int main(void) {
 
-    state = malloc(sizeof(RPCC_STATE));
-    state->is_rpcc_connected = false;
-    state->rpcc_port = -1;
-
     start_ports_scan(rpcc_connected);
 
     WINDOW_SUBCLASS_PARAMS *window_params = malloc(sizeof(WINDOW_SUBCLASS_PARAMS));
     init_window(window_params);
 
-    Font font = LoadFontEx("assets/inter.ttf", 96, NULL, 0);
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+    GUIContext context = (GUIContext) {
+        .connected_animation = 0.0,
+        .configuration_animation = 0.0,
+        .status_color_animation = 0.0,
 
-    RenderTexture2D target = LoadRenderTexture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-    SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+        .is_configuring = false,
+        .selected_button = -1
+    };
+
+    load_gui(&context);
 
     while (1) {
 
@@ -102,49 +106,19 @@ int main(void) {
             continue;
         }
 
-        // if (IsKeyPressed(KEY_Q)) {
-        //     state->is_rpcc_connected = !state->is_rpcc_connected;
-        // }
+        if (IsKeyReleased(KEY_Q)) {
+            state.is_rpcc_connected = !state.is_rpcc_connected;
+        }
 
-        BeginTextureMode(target);
-
-        draw_gui(state, &font);
-
-        EndTextureMode();
-
-        ClearBackground(BACKGROUND_DARK);
-
-        BeginDrawing();
-
-        float scale = fminf((float) GetScreenWidth() / VIRTUAL_HEIGHT, (float) GetScreenHeight() / VIRTUAL_HEIGHT);
-        Rectangle sourceRec = { 0.0f, 0.0f, (float) VIRTUAL_WIDTH, -(float)VIRTUAL_HEIGHT };
-        Rectangle destRec = {
-            ((float) GetScreenWidth() - ((float) VIRTUAL_WIDTH * scale)),
-            ((float) GetScreenHeight() - ((float) VIRTUAL_HEIGHT * scale)),
-            (float) VIRTUAL_WIDTH * scale,
-            (float) VIRTUAL_HEIGHT * scale
-        };
-
-        DrawTexturePro(
-            target.texture,
-            sourceRec,
-            destRec,
-            (Vector2) {0, 0},
-            0.0f, 
-            WHITE
-        );
-
-        EndDrawing();
+        render_screen(&context, &state);
     }
 
     remove_window_subclass(window);
     CloseWindow();
 
-    UnloadFont(font);
-    UnloadRenderTexture(target);
-
+    unload_gui(&context);
+    
     free(window_params);
-    free(state);
     
     return 0;
 }
