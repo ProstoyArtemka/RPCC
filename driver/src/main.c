@@ -63,7 +63,7 @@ void init_window(WINDOW_SUBCLASS_PARAMS *window_params) {
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
 
-    Image icon = LoadImage("assets/icon.png");
+    Image icon = LoadImage("assets/icons/icon.png");
     SetWindowIcon(icon);
     UnloadImage(icon);
 
@@ -92,7 +92,9 @@ int main(void) {
         .status_color_animation = 0.0,
 
         .is_configuring = false,
-        .selected_button = -1
+
+        .selected_button = -1,
+        .selected_configuration_option = 4
     };
 
     load_gui(&context);

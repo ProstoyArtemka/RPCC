@@ -24,6 +24,12 @@ void button_c_pressed(GUIContext *context) { context->selected_button = 2; set_c
 
 void exit_button_pressed(GUIContext *context) { context->selected_button = -1; context->connected_animation = 0.0f; }
 
+void option_app_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 0; }
+void option_link_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 1; }
+void option_wrap_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 2; }
+void option_cmd_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 3; }
+void option_nothing_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 4; }
+
 CharButton select_buttons[] = {
 
     (CharButton) {
@@ -90,7 +96,104 @@ IconButton exit_button = (IconButton) {
     .callback = exit_button_pressed
 };
 
+ConfigurationOption options[] = {
 
+    (ConfigurationOption) {
+
+        .rect = (Rectangle) {
+            .x = 458.0,
+            .y = 272.0,
+            .width = 200.0,
+            .height = 150.0
+        },
+
+        .path = "assets/icons/app.png",
+        .texture = (Texture2D) {0},
+
+        .hovering_progress = 0.0f,
+        .press_progress = 0.0f,
+        
+        .callback = option_app_pressed
+
+    },
+
+    (ConfigurationOption) {
+
+        .rect = (Rectangle) {
+            .x = 658.0,
+            .y = 272.0,
+            .width = 200.0,
+            .height = 150.0
+        },
+
+        .path = "assets/icons/link.png",
+        .texture = (Texture2D) {0},
+
+        .hovering_progress = 0.0f,
+        .press_progress = 0.0f,
+
+        .callback = option_link_pressed
+
+    },
+
+    (ConfigurationOption) {
+
+        .rect = (Rectangle) {
+            .x = 858.0,
+            .y = 272.0,
+            .width = 200.0,
+            .height = 150.0
+        },
+
+        .path = "assets/icons/wrap.png",
+        .texture = (Texture2D) {0},
+
+        .hovering_progress = 0.0f,
+        .press_progress = 0.0f,
+
+        .callback = option_wrap_pressed
+
+    },
+
+    (ConfigurationOption) {
+
+        .rect = (Rectangle) {
+            .x = 1058.0,
+            .y = 272.0,
+            .width = 200.0,
+            .height = 150.0
+        },
+
+        .path = "assets/icons/cmd.png",
+        .texture = (Texture2D) {0},
+
+        .hovering_progress = 0.0f,
+        .press_progress = 0.0f,
+
+        .callback = option_cmd_pressed
+
+    },
+
+    (ConfigurationOption) {
+
+        .rect = (Rectangle) {
+            .x = 1258.0,
+            .y = 272.0,
+            .width = 200.0,
+            .height = 150.0
+        },
+
+        .path = "assets/icons/nothing.png",
+        .texture = (Texture2D) {0},
+
+        .hovering_progress = 0.0f,
+        .press_progress = 1.0f,
+
+        .callback = option_nothing_pressed
+
+    },
+
+};
 
 char* get_status_text(RPCCState *state) {
     return state->is_rpcc_connected
@@ -158,6 +261,14 @@ void smooth_text(float ease, char* prefix, char* smooth, char* suffix, char* out
 
 }
 
+void expand_rectangle(Rectangle *rect, float amount) {
+
+    rect->x -= amount;
+    rect->y -= amount;
+    rect->height += amount * 2.0f;
+    rect->width += amount * 2.0f;
+
+}
 
 
 void draw_text(Font font, char *text, Vector2 position, float size, float spacing, Color color) {
@@ -175,7 +286,9 @@ void draw_default_status(GUIContext *context) {
     float rect_height = 150.0;
     
     Rectangle status_bg_rectangle = (Rectangle) { rect_x, rect_y, rect_width, rect_height }; 
-    Rectangle stroke_bg_rectangle = (Rectangle) { rect_x - 5, rect_y - 5, rect_width + 10, rect_height + 10 };
+
+    Rectangle stroke_bg_rectangle = status_bg_rectangle;
+    expand_rectangle(&stroke_bg_rectangle, 5.0f);
 
     Color status_bg_color = (Color) { 11 + (1.0f - context->status_color_animation), 11 + (22 * context->status_color_animation), 11, 255 };
     Color status_color = (Color) { 255 * (1.0f - context->status_color_animation), 255 * context->status_color_animation, 0, 255 };
@@ -245,7 +358,8 @@ void draw_minimized_status(GUIContext *context, RPCCState *state) {
 void draw_button_square(GUIContext *context, float x, float y, float size, float stroke_size, Color background, Color background_hover, Color stroke, Color stroke_hover, float *hovering_progress) {
 
     Rectangle rect = (Rectangle) { x, y, size, size };
-    Rectangle stroke_rect = (Rectangle) { x - stroke_size, y - stroke_size, size + (stroke_size * 2), size + (stroke_size * 2) };
+    Rectangle stroke_rect = rect;
+    expand_rectangle(&stroke_rect, stroke_size);
 
     bool is_mouse_hovering = is_mouse_hovers_rect(context, &rect);
     tick(is_mouse_hovering, hovering_progress, 10.0f, context->delta);
@@ -339,6 +453,125 @@ void draw_exit_button(GUIContext *context) {
 
 }
 
+Color get_option_background_color(GUIContext *context, int index, float t) {
+
+    return transform_color(
+        t,
+        OPTION_DEFAULT_BACKGROUND,
+        OPTION_SELECTED_BACKGROUND
+    );
+
+}
+
+Color get_option_stroke_color(GUIContext *context, int index, float t) { 
+
+    return transform_color(
+        t, 
+        OPTION_DEFAULT_STROKE,
+        OPTION_SELECTED_STROKE
+    );
+
+}
+
+void draw_configuration_options(GUIContext *context) {
+
+    float ease = EaseCircInOut(context->configuration_animation, 0.0f, 1.0f, 1.0f);
+    float invert_ease = (1.0f - ease);
+
+    float x = 458.0;
+    float y = 272.0;
+
+    // Left option
+
+    Color left_option_background_color = get_option_background_color(context, 0, options[0].press_progress);
+    Color left_option_stroke_color = get_option_stroke_color(context, 0, options[0].press_progress);
+
+    Rectangle left_option_rect = (Rectangle) { x, y, 200.0, 150.0 * ease };
+    Rectangle left_option_stroke_rect = left_option_rect;
+    expand_rectangle(&left_option_stroke_rect, 5.0f);
+    
+    Rectangle left_option_square_rect = (Rectangle) {x + 150.0, y, 110.0, 150.0 * ease};
+    Rectangle left_option_square_stroke_rect = left_option_square_rect;
+    expand_rectangle(&left_option_square_stroke_rect, 5.0f);
+    left_option_square_stroke_rect.x += 20;
+    left_option_square_stroke_rect.width = 90.0f;
+
+    DrawRectangleRounded(left_option_stroke_rect, 0.5f, 16, left_option_stroke_color);
+    DrawRectangleRounded(left_option_rect, 0.5f, 16, left_option_background_color);
+
+    DrawRectangleRec(left_option_square_stroke_rect, left_option_stroke_color);
+    DrawRectangleRec(left_option_square_rect, left_option_background_color);
+
+    // Right option
+
+    Color right_option_background_color = get_option_background_color(context, 4, options[4].press_progress);
+    Color right_option_stroke_color = get_option_stroke_color(context, 4, options[4].press_progress);
+
+    Rectangle right_option_rect = (Rectangle) { x + (800.0), y, 200.0, 150.0 * ease };
+    Rectangle right_option_stroke_rect = right_option_rect;
+    expand_rectangle(&right_option_stroke_rect, 5.0f);
+    
+    Rectangle right_option_square_rect = (Rectangle) {x + (790.0), y, 110.0, 150.0 * ease};
+    Rectangle right_option_square_stroke_rect = right_option_square_rect;
+    expand_rectangle(&right_option_square_stroke_rect, 5.0f);
+    right_option_square_stroke_rect.x += 20;
+    right_option_square_stroke_rect.width = 20.0f;
+
+    DrawRectangleRounded(right_option_stroke_rect, 0.5f, 16, right_option_stroke_color);
+    DrawRectangleRounded(right_option_rect, 0.5f, 16, right_option_background_color);
+
+    DrawRectangleRec(right_option_square_stroke_rect, right_option_stroke_color);
+    DrawRectangleRec(right_option_square_rect, right_option_background_color);
+
+
+
+    for (int i = 0; i < 5; i++) {
+
+        if (i > 0 && i < 4) {
+
+            Color option_background_color = get_option_background_color(context, i, options[i].press_progress);
+            Color option_stroke_color = get_option_stroke_color(context, i, options[i].press_progress);
+
+            float option_x = x + (i * 200);
+
+            Rectangle background_center_rect = (Rectangle) { option_x, y, 200.0, 150.0 * ease };
+            Rectangle stroke_center_rect = background_center_rect;
+            expand_rectangle(&stroke_center_rect, 5.0f);
+
+            DrawRectangleRec(stroke_center_rect, option_stroke_color);
+            DrawRectangleRec(background_center_rect, option_background_color);
+
+            Vector2 start = (Vector2) { x + (200.0 * i), y };
+            Vector2 end = (Vector2) { x + (200.0 * i), y + (150.0 * ease) };
+        
+            DrawLineEx(start, end, 5, option_stroke_color);
+
+        }
+
+        ConfigurationOption *option = &options[i];
+        Vector2 option_position = (Vector2) { option->rect.x + 50.0 + (50.0 * invert_ease), option->rect.y + 25.0 + (-25.0 * invert_ease) };
+
+        tick(context->selected_configuration_option[context->selected_button] == i, &option->press_progress, 5.0f, context->delta);
+        Color option_icon_color = transform_color(option->press_progress, WHITE, BLACK);
+
+        DrawTextureEx(option->texture, option_position, 0.0f, ease, option_icon_color);
+        
+    }
+
+}
+
+void press_configuration_options(GUIContext *context) {
+
+    for (int i = 0; i < 5; i++) {
+        ConfigurationOption *option = &options[i];
+
+        if (is_mouse_hovers_rect(context, &option->rect) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+            option->callback(context);
+
+    }
+
+}
+
 void draw_gui(GUIContext *context, RPCCState *state) {
 
     ClearBackground(BACKGROUND_DARK);
@@ -350,6 +583,9 @@ void draw_gui(GUIContext *context, RPCCState *state) {
 
         draw_exit_button(context);
         press_button(context, exit_button.rect, exit_button.callback);
+
+        draw_configuration_options(context);
+        press_configuration_options(context);
     }
 
     if (!is_configuring(context) && context->configuration_animation > 0.0f) {
@@ -358,6 +594,8 @@ void draw_gui(GUIContext *context, RPCCState *state) {
         draw_configuration_title(context);
 
         draw_exit_button(context);
+
+        draw_configuration_options(context);
     }
 
     if (!is_configuring(context) && context->configuration_animation == 0.0f) {
@@ -385,6 +623,15 @@ void load_gui(GUIContext *context) {
     SetTextureFilter(context->font.texture, TEXTURE_FILTER_BILINEAR);
 
     exit_button.texture = LoadTexture(exit_button.path);
+    SetTextureFilter(exit_button.texture, TEXTURE_FILTER_BILINEAR);
+
+    size_t options_size = sizeof(options) / sizeof(ConfigurationOption);
+    for (size_t i = 0; i < options_size; i++) {
+        ConfigurationOption *option = &options[i];
+
+        option->texture = LoadTexture(option->path);
+        SetTextureFilter(option->texture, TEXTURE_FILTER_BILINEAR);
+    }
 
 }
 
@@ -395,6 +642,9 @@ void unload_gui(GUIContext *context) {
 
     UnloadTexture(exit_button.texture);
 
+    size_t options_size = sizeof(options) / sizeof(ConfigurationOption);
+    for (size_t i = 0; i < options_size; i++)
+        UnloadTexture(options[i].texture);
 }
 
 void render_screen(GUIContext *context, RPCCState *state) {

@@ -9,6 +9,8 @@
 #define VIRTUAL_WIDTH 1920
 #define VIRTUAL_HEIGHT 1080
 
+#define TRANSPARENT (Color) { 0, 0, 0, 0 }
+
 #define BACKGROUND_DARK (Color) { 3, 3, 3, 255 }
 #define BACKGROUND (Color) { 11, 11, 11, 255 }
 #define BACKGROUND_LIGHT (Color) { 22, 22, 22, 255 }
@@ -21,6 +23,15 @@
 
 #define BUTTON_HOVER_BACKGROUND (Color) { 44, 44, 44, 255 }
 #define BUTTON_HOVER_STROKE (Color) { 92, 92, 92, 255 }
+
+#define OPTION_DEFAULT_BACKGROUND (Color) { 22, 22, 22, 255 }
+#define OPTION_DEFAULT_STROKE (Color) { 72, 72, 72, 255 }
+
+#define OPTION_HOVER_BACKGROUND (Color)  { 22, 22, 22, 255 }
+#define OPTION_HOVER_STROKE (Color) { 72, 72, 72, 255 }
+
+#define OPTION_SELECTED_BACKGROUND (Color) { 255, 255, 255, 255 }
+#define OPTION_SELECTED_STROKE (Color) { 72, 72, 72, 255 }
 
 typedef struct {
 
@@ -42,6 +53,7 @@ typedef struct {
     float status_color_animation;
 
     int selected_button;
+    int selected_configuration_option[3];
 
     char status_text[32];
     char configuration_title[64];
@@ -74,6 +86,20 @@ typedef struct {
     void (*callback) (GUIContext*);
 
 } IconButton;
+
+typedef struct {
+
+    Rectangle rect;
+
+    char *path;
+    Texture2D texture;
+
+    float hovering_progress;
+    float press_progress;
+
+    void (*callback) (GUIContext*);
+
+} ConfigurationOption;
 
 void load_gui(GUIContext *context);
 void unload_gui(GUIContext *context);
