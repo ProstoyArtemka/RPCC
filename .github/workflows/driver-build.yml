@@ -1,0 +1,40 @@
+name: RPCC Driver Build & Release
+
+on: 
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    permissions: 
+      contents: write
+
+    steps: 
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -S ./driver -B ./driver/build
+
+    - name: Build project
+      run: cmake --build ./driver/build --config Release
+
+    - name: Pack to ZIP
+      shell: powershell
+      run: |
+        New-Item -ItemType Directory -Path ./driver/build/temp
+        Copy-Item -Path ./driver/build/rpcc_driver.exe ./driver/build/temp
+        Copy-Item -Path ./driver/assets -Destination ./driver/build/temp
+
+        Compress-Archive -Path ./driver/build/temp/* -DestinationPath ./driver/build/rpcc_driver.zip
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+
+      with: 
+        name: Release ${{ github.ref_name }}
+
+        files: ./driver/build/rpcc_driver.zip

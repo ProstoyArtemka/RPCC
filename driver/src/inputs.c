@@ -45,7 +45,7 @@ void option_pressed(GUIContext *context, Config *config, ButtonAction action) {
         case SCRIPT: {
 
             ScriptActionData *data = malloc(sizeof(ScriptActionData));
-            
+
             data->script = malloc(1);
             strcpy(data->script, "");
 
@@ -106,8 +106,6 @@ void press_configuration_options(GUIContext *context, Config *config) {
 
 void process_inputs(GUIContext *context, RPCCState *state, Config *config) {
 
-
-    
     if (!context->is_configuring && state->is_rpcc_connected) {
 
         press_select_buttons(context);
