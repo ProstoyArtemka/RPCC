@@ -5,30 +5,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <config.h>
 
-bool is_configuring(GUIContext *context) { return context->selected_button != -1; }
+#include <inputs.h>
 
-void set_configuration_title(GUIContext *context, char button) {
-    
-    snprintf(
-        context->configuration_title,
-        sizeof(context->configuration_title),
-        "Configure button %c functionality",
-        button
-    );
-}
 
-void button_a_pressed(GUIContext *context) { context->selected_button = 0; set_configuration_title(context, 'A'); }
-void button_b_pressed(GUIContext *context) { context->selected_button = 1; set_configuration_title(context, 'B'); }
-void button_c_pressed(GUIContext *context) { context->selected_button = 2; set_configuration_title(context, 'C'); }
-
-void exit_button_pressed(GUIContext *context) { context->selected_button = -1; context->connected_animation = 0.0f; }
-
-void option_app_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 0; }
-void option_link_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 1; }
-void option_wrap_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 2; }
-void option_cmd_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 3; }
-void option_nothing_pressed(GUIContext *context) { context->selected_configuration_option[context->selected_button] = 4; }
 
 CharButton select_buttons[] = {
 
@@ -42,9 +23,7 @@ CharButton select_buttons[] = {
 
         .text = "A",
 
-        .hovering_progress = 0,
-
-        .callback = button_a_pressed
+        .hovering_progress = 0
     },
 
     (CharButton) {
@@ -58,9 +37,7 @@ CharButton select_buttons[] = {
 
         .text = "B",
 
-        .hovering_progress = 0,
-
-        .callback = button_b_pressed
+        .hovering_progress = 0
     },
 
     (CharButton) {
@@ -73,9 +50,7 @@ CharButton select_buttons[] = {
         
         .text = "C",
 
-        .hovering_progress = 0,
-
-        .callback = button_c_pressed
+        .hovering_progress = 0
     }
 };
 
@@ -91,9 +66,7 @@ IconButton exit_button = (IconButton) {
     .path = "assets/icons/close.png",
     .texture = {0},
 
-    .hovering_progress = 0.,
-
-    .callback = exit_button_pressed
+    .hovering_progress = 0.
 };
 
 ConfigurationOption options[] = {
@@ -102,7 +75,7 @@ ConfigurationOption options[] = {
 
         .rect = (Rectangle) {
             .x = 458.0,
-            .y = 272.0,
+            .y = 75.0,
             .width = 200.0,
             .height = 150.0
         },
@@ -111,9 +84,7 @@ ConfigurationOption options[] = {
         .texture = (Texture2D) {0},
 
         .hovering_progress = 0.0f,
-        .press_progress = 0.0f,
-        
-        .callback = option_app_pressed
+        .press_progress = 0.0f
 
     },
 
@@ -121,7 +92,7 @@ ConfigurationOption options[] = {
 
         .rect = (Rectangle) {
             .x = 658.0,
-            .y = 272.0,
+            .y = 75.0,
             .width = 200.0,
             .height = 150.0
         },
@@ -130,9 +101,7 @@ ConfigurationOption options[] = {
         .texture = (Texture2D) {0},
 
         .hovering_progress = 0.0f,
-        .press_progress = 0.0f,
-
-        .callback = option_link_pressed
+        .press_progress = 0.0f
 
     },
 
@@ -140,7 +109,7 @@ ConfigurationOption options[] = {
 
         .rect = (Rectangle) {
             .x = 858.0,
-            .y = 272.0,
+            .y = 75.0,
             .width = 200.0,
             .height = 150.0
         },
@@ -149,9 +118,7 @@ ConfigurationOption options[] = {
         .texture = (Texture2D) {0},
 
         .hovering_progress = 0.0f,
-        .press_progress = 0.0f,
-
-        .callback = option_wrap_pressed
+        .press_progress = 0.0f
 
     },
 
@@ -159,7 +126,7 @@ ConfigurationOption options[] = {
 
         .rect = (Rectangle) {
             .x = 1058.0,
-            .y = 272.0,
+            .y = 75.0,
             .width = 200.0,
             .height = 150.0
         },
@@ -168,9 +135,7 @@ ConfigurationOption options[] = {
         .texture = (Texture2D) {0},
 
         .hovering_progress = 0.0f,
-        .press_progress = 0.0f,
-
-        .callback = option_cmd_pressed
+        .press_progress = 0.0f
 
     },
 
@@ -178,7 +143,7 @@ ConfigurationOption options[] = {
 
         .rect = (Rectangle) {
             .x = 1258.0,
-            .y = 272.0,
+            .y = 75.0,
             .width = 200.0,
             .height = 150.0
         },
@@ -186,10 +151,8 @@ ConfigurationOption options[] = {
         .path = "assets/icons/nothing.png",
         .texture = (Texture2D) {0},
 
-        .hovering_progress = 0.0f,
-        .press_progress = 1.0f,
-
-        .callback = option_nothing_pressed
+        .hovering_progress = 1.0f,
+        .press_progress = 1.0f
 
     },
 
@@ -271,6 +234,7 @@ void expand_rectangle(Rectangle *rect, float amount) {
 }
 
 
+
 void draw_text(Font font, char *text, Vector2 position, float size, float spacing, Color color) {
     DrawTextEx(font, text, position, size, spacing, color);
 }
@@ -330,7 +294,7 @@ void draw_minimized_status(GUIContext *context, RPCCState *state) {
     float rect_width = 150 + (395. * invert_ease);
     float rect_height = 150.0;
 
-    if (!state->is_rpcc_connected && !is_configuring(context)) rect_width += (70. * invert_ease);
+    if (!state->is_rpcc_connected && !context->is_configuring) rect_width += (70. * invert_ease);
 
     Rectangle status_bg_rectangle = (Rectangle) { rect_x, rect_y, rect_width, rect_height }; 
     Rectangle stroke_bg_rectangle = (Rectangle) { rect_x - 5, rect_y - 5, rect_width + 10, rect_height + 10 };
@@ -416,33 +380,13 @@ void draw_icon_button(GUIContext *context, IconButton *button) {
     DrawTexturePro(button->texture, source, destination, origin, 0.0f, WHITE);
 }
 
-void press_button(GUIContext *context, Rectangle rect, void (*callback) (GUIContext*)) {
-
-    if (is_mouse_hovers_rect(context, &rect) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        callback(context);
-
-}
-
 void draw_select_buttons(GUIContext *context) {
 
     for (int i = 0; i < sizeof(select_buttons) / sizeof(CharButton); i++) {
         CharButton *button = &select_buttons[i];
         
         draw_char_button(context, button);
-        press_button(context, button->rect, button->callback);
     }
-}
-
-void draw_configuration_title(GUIContext *context) {
-
-    float ease = EaseCircInOut((context->configuration_animation - 0.5f) * 2.0f, 0.0f, 1.0f, 1.0f);
-
-    float font_size = 54 * ease;
-    Vector2 text_size = MeasureTextEx(context->font, context->configuration_title, font_size, 1.5f);
-    float text_x = (1920.0 / 2) - (text_size.x / 2);
-    float text_y = 128;
-
-    draw_text(context->font, context->configuration_title, (Vector2) {text_x, text_y}, font_size, 1.5f, WHITE);
 }
 
 void draw_exit_button(GUIContext *context) {
@@ -453,38 +397,37 @@ void draw_exit_button(GUIContext *context) {
 
 }
 
-Color get_option_background_color(GUIContext *context, int index, float t) {
+Color get_option_background_color(GUIContext *context, ConfigurationOption *option) {
 
-    return transform_color(
-        t,
-        OPTION_DEFAULT_BACKGROUND,
-        OPTION_SELECTED_BACKGROUND
-    );
+    if (option->press_progress > 0.0f)     
+        return transform_color(option->press_progress, OPTION_HOVER_BACKGROUND, OPTION_SELECTED_BACKGROUND);
+
+    return transform_color(option->hovering_progress, OPTION_DEFAULT_BACKGROUND, OPTION_HOVER_BACKGROUND);
 
 }
 
-Color get_option_stroke_color(GUIContext *context, int index, float t) { 
+Color get_option_stroke_color(GUIContext *context, ConfigurationOption *option) { 
 
-    return transform_color(
-        t, 
-        OPTION_DEFAULT_STROKE,
-        OPTION_SELECTED_STROKE
-    );
+    if (option->press_progress > 0.0f)
+        return transform_color(option->press_progress, OPTION_HOVER_STROKE, OPTION_SELECTED_STROKE);
+
+    return transform_color(option->hovering_progress, OPTION_DEFAULT_STROKE, OPTION_HOVER_STROKE);
 
 }
 
 void draw_configuration_options(GUIContext *context) {
 
-    float ease = EaseCircInOut(context->configuration_animation, 0.0f, 1.0f, 1.0f);
-    float invert_ease = (1.0f - ease);
+    float ease = EaseCircInOut(fmaxf(0.0f, (context->configuration_animation - 0.5f) * 2.0f), 0.0f, 1.0f, 1.0f);
+    if (ease == 0.0f) return;
 
+    float invert_ease = (1.0f - ease);
     float x = 458.0;
-    float y = 272.0;
+    float y = 75.0;
 
     // Left option
 
-    Color left_option_background_color = get_option_background_color(context, 0, options[0].press_progress);
-    Color left_option_stroke_color = get_option_stroke_color(context, 0, options[0].press_progress);
+    Color left_option_background_color = get_option_background_color(context, &options[0]);
+    Color left_option_stroke_color = get_option_stroke_color(context, &options[0]);
 
     Rectangle left_option_rect = (Rectangle) { x, y, 200.0, 150.0 * ease };
     Rectangle left_option_stroke_rect = left_option_rect;
@@ -504,8 +447,8 @@ void draw_configuration_options(GUIContext *context) {
 
     // Right option
 
-    Color right_option_background_color = get_option_background_color(context, 4, options[4].press_progress);
-    Color right_option_stroke_color = get_option_stroke_color(context, 4, options[4].press_progress);
+    Color right_option_background_color = get_option_background_color(context, &options[4]);
+    Color right_option_stroke_color = get_option_stroke_color(context, &options[4]);
 
     Rectangle right_option_rect = (Rectangle) { x + (800.0), y, 200.0, 150.0 * ease };
     Rectangle right_option_stroke_rect = right_option_rect;
@@ -527,10 +470,18 @@ void draw_configuration_options(GUIContext *context) {
 
     for (int i = 0; i < 5; i++) {
 
+        ConfigurationOption *option = &options[i];
+
+        bool is_hovered = is_mouse_hovers_rect(context, &option->rect);
+        bool is_pressed = context->selected_configuration_option[context->selected_button] == i;
+
+        tick(is_hovered, &option->hovering_progress, 5.0f, context->delta);
+        tick(is_pressed, &option->press_progress, 5.0f, context->delta);
+
         if (i > 0 && i < 4) {
 
-            Color option_background_color = get_option_background_color(context, i, options[i].press_progress);
-            Color option_stroke_color = get_option_stroke_color(context, i, options[i].press_progress);
+            Color option_background_color = get_option_background_color(context, option);
+            Color option_stroke_color = get_option_stroke_color(context, option);
 
             float option_x = x + (i * 200);
 
@@ -548,10 +499,7 @@ void draw_configuration_options(GUIContext *context) {
 
         }
 
-        ConfigurationOption *option = &options[i];
         Vector2 option_position = (Vector2) { option->rect.x + 50.0 + (50.0 * invert_ease), option->rect.y + 25.0 + (-25.0 * invert_ease) };
-
-        tick(context->selected_configuration_option[context->selected_button] == i, &option->press_progress, 5.0f, context->delta);
         Color option_icon_color = transform_color(option->press_progress, WHITE, BLACK);
 
         DrawTextureEx(option->texture, option_position, 0.0f, ease, option_icon_color);
@@ -560,15 +508,9 @@ void draw_configuration_options(GUIContext *context) {
 
 }
 
-void press_configuration_options(GUIContext *context) {
+void draw_configuration_setttings(GUIContext *context) {
 
-    for (int i = 0; i < 5; i++) {
-        ConfigurationOption *option = &options[i];
 
-        if (is_mouse_hovers_rect(context, &option->rect) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-            option->callback(context);
-
-    }
 
 }
 
@@ -576,29 +518,25 @@ void draw_gui(GUIContext *context, RPCCState *state) {
 
     ClearBackground(BACKGROUND_DARK);
 
-    if (is_configuring(context)) {
-
-        draw_configuration_title(context);
-        draw_minimized_status(context, state);
-
-        draw_exit_button(context);
-        press_button(context, exit_button.rect, exit_button.callback);
-
-        draw_configuration_options(context);
-        press_configuration_options(context);
-    }
-
-    if (!is_configuring(context) && context->configuration_animation > 0.0f) {
+    if (context->is_configuring) {
 
         draw_minimized_status(context, state);
-        draw_configuration_title(context);
 
         draw_exit_button(context);
 
         draw_configuration_options(context);
     }
 
-    if (!is_configuring(context) && context->configuration_animation == 0.0f) {
+    if (!context->is_configuring && context->configuration_animation > 0.0f) {
+
+        draw_minimized_status(context, state);
+
+        draw_exit_button(context);
+
+        draw_configuration_options(context);
+    }
+
+    if (!context->is_configuring && context->configuration_animation == 0.0f) {
 
         draw_default_status(context);
 
@@ -606,7 +544,7 @@ void draw_gui(GUIContext *context, RPCCState *state) {
 
     if (context->connected_animation != 0) draw_select_buttons(context);
 
-    tick(state->is_rpcc_connected && !is_configuring(context), &context->connected_animation, 1.0f, context->delta);
+    tick(state->is_rpcc_connected && !context->is_configuring, &context->connected_animation, 1.0f, context->delta);
     tick(context->selected_button != -1, &context->configuration_animation, 1.0f, context->delta);
     tick(state->is_rpcc_connected, &context->status_color_animation, 1.0f, context->delta);
 

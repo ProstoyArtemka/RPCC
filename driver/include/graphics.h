@@ -3,6 +3,8 @@
 
 #include "raylib.h"
 
+#include <config.h>
+
 #define BASE_WIDTH 1280
 #define BASE_HEIGHT 720
 
@@ -11,20 +13,20 @@
 
 #define TRANSPARENT (Color) { 0, 0, 0, 0 }
 
-#define BACKGROUND_DARK (Color) { 3, 3, 3, 255 }
-#define BACKGROUND (Color) { 11, 11, 11, 255 }
+#define BACKGROUND_DARK (Color) { 0, 0, 0, 255 }
+#define BACKGROUND (Color) { 0, 0, 0, 255 }
 #define BACKGROUND_LIGHT (Color) { 22, 22, 22, 255 }
 
 #define STATUS_BAR_CONNECTED (Color) { 11, 33, 11, 255 }
 #define STATUS_BAR_DISCONNECTED (Color) { 33, 11, 11, 255 }
 
-#define BUTTON_DEFAULT_BACKGROUND (Color) { 22, 22, 22, 255 }
+#define BUTTON_DEFAULT_BACKGROUND (Color) { 0, 0, 0, 255 }
 #define BUTTON_DEFAULT_STROKE (Color) { 72, 72, 72, 255 }
 
-#define BUTTON_HOVER_BACKGROUND (Color) { 44, 44, 44, 255 }
+#define BUTTON_HOVER_BACKGROUND (Color) { 22, 22, 22, 255 }
 #define BUTTON_HOVER_STROKE (Color) { 92, 92, 92, 255 }
 
-#define OPTION_DEFAULT_BACKGROUND (Color) { 22, 22, 22, 255 }
+#define OPTION_DEFAULT_BACKGROUND (Color) { 0, 0, 0, 255 }
 #define OPTION_DEFAULT_STROKE (Color) { 72, 72, 72, 255 }
 
 #define OPTION_HOVER_BACKGROUND (Color)  { 22, 22, 22, 255 }
@@ -53,10 +55,9 @@ typedef struct {
     float status_color_animation;
 
     int selected_button;
-    int selected_configuration_option[3];
+    ButtonAction selected_configuration_option[3];
 
     char status_text[32];
-    char configuration_title[64];
 
     bool is_configuring;
 
@@ -70,8 +71,6 @@ typedef struct {
 
     float hovering_progress;
 
-    void (*callback) (GUIContext*);
-
 } CharButton;
 
 typedef struct {
@@ -82,8 +81,6 @@ typedef struct {
     Texture2D texture;
 
     float hovering_progress;
-
-    void (*callback) (GUIContext*);
 
 } IconButton;
 
@@ -97,9 +94,15 @@ typedef struct {
     float hovering_progress;
     float press_progress;
 
-    void (*callback) (GUIContext*);
-
 } ConfigurationOption;
+
+
+extern CharButton select_buttons[3];
+extern IconButton exit_button;
+extern ConfigurationOption options[5];
+
+
+bool is_mouse_hovers_rect(GUIContext *context, Rectangle *rectangle);
 
 void load_gui(GUIContext *context);
 void unload_gui(GUIContext *context);

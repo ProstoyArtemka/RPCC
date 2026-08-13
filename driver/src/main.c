@@ -6,15 +6,43 @@
 #include <stdlib.h>
 #include <winapi.h>
 #include <uart.h>
+
 #include <graphics.h>
+#include <config.h>
+#include <inputs.h>
 
 RPCCState state = (RPCCState) {
     .is_rpcc_connected = false,
     .rpcc_port = -1
 };
 
+Config config = (Config) {
+
+    .buttons = (ButtonConfig[]) {
+
+        (ButtonConfig) { .action = NOTHING },
+        (ButtonConfig) { .action = NOTHING },
+        (ButtonConfig) { .action = NOTHING },
+
+    }
+
+};
+
+GUIContext context = (GUIContext) {
+    .connected_animation = 0.0,
+    .configuration_animation = 0.0,
+    .status_color_animation = 0.0,
+
+    .is_configuring = false,
+
+    .selected_button = -1,
+    .selected_configuration_option = {NOTHING, NOTHING, NOTHING},
+};
+
 bool is_hidden = false;
 void* window;
+
+
 
 void rpcc_connected(int port) {
 
@@ -79,24 +107,29 @@ void init_window(WINDOW_SUBCLASS_PARAMS *window_params) {
 
 }
 
+void init_config() {
+
+    ConfigReadResult result = load_config(&config);
+    if (result == CONFIG_READ_SUCCESS) {
+
+        for (size_t i = 0; i < sizeof(context.selected_configuration_option) / sizeof(ButtonAction); i++)
+            context.selected_configuration_option[i] = config.buttons[i].action;
+
+        return;
+    }
+
+    if (save_config(&config) == CONFIG_SAVE_ERROR) exit(1);
+}
+
 int main(void) {
+
+    init_config();
 
     start_ports_scan(rpcc_connected);
 
     WINDOW_SUBCLASS_PARAMS *window_params = malloc(sizeof(WINDOW_SUBCLASS_PARAMS));
     init_window(window_params);
-
-    GUIContext context = (GUIContext) {
-        .connected_animation = 0.0,
-        .configuration_animation = 0.0,
-        .status_color_animation = 0.0,
-
-        .is_configuring = false,
-
-        .selected_button = -1,
-        .selected_configuration_option = 4
-    };
-
+    
     load_gui(&context);
 
     while (1) {
@@ -112,6 +145,7 @@ int main(void) {
             state.is_rpcc_connected = !state.is_rpcc_connected;
         }
 
+        process_inputs(&context, &state, &config);        
         render_screen(&context, &state);
     }
 
@@ -119,6 +153,7 @@ int main(void) {
     CloseWindow();
 
     unload_gui(&context);
+    unload_config(&config);
     
     free(window_params);
     
