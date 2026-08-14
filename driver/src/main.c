@@ -123,8 +123,6 @@ void init_config() {
 
 int main(void) {
 
-    TraceLog(LOG_INFO, "Проверка UTF-8 в консоли: %s", "Привет");
-
     init_config();
 
     start_ports_scan(rpcc_connected);

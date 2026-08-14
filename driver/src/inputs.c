@@ -96,7 +96,11 @@ void exit_button_pressed(GUIContext *context, Config *config, void *data) {
 
 }
 
+void as_administrator_checkbox_pressed(GUIContext *context, Config *config, void* data) {
 
+    as_administrator_checkbox.checked = !as_administrator_checkbox.checked;
+
+}
 
 void press_button(GUIContext *context, Config *config, Rectangle rect, ButtonCallback callback, void *data) {
 
@@ -159,6 +163,7 @@ void process_inputs(GUIContext *context, RPCCState *state, Config *config, void*
         press_configuration_options(context, config);
         press_button(context, config, exit_button.rect, exit_button_pressed, 0);
         press_app_path_input(context, config, hwnd);
+        press_button(context, config, as_administrator_checkbox.rect, as_administrator_checkbox_pressed, 0);
 
     }
 

@@ -10,7 +10,18 @@
 #include <config.h>
 #include <inputs.h>
 
+Icon checkbox_icon = (Icon) {
+  
+    .rect = (Rectangle) {
+        .x = 0.0f,
+        .y = 0.0f,
+        .height = 75.0f,
+        .width = 75.0f
+    },
+    
+    .path = "assets/icons/check.png"
 
+};
 
 CharButton select_buttons[] = {
 
@@ -185,7 +196,6 @@ TextLineInput open_file_input = (TextLineInput) {
     .hovering_progress = 0.0f,
 
 };
-
 Icon open_file_icon = (Icon) {
 
     .rect = (Rectangle) {
@@ -198,8 +208,20 @@ Icon open_file_icon = (Icon) {
     .path = "assets/icons/add.png"
 
 };
+Checkbox as_administrator_checkbox = (Checkbox) {
 
+    .rect = (Rectangle) {
+        .x = 400.0f,
+        .y = 600.0f,
+        .width = 100.0f,
+        .height = 100.0f
+    },
 
+    .hovering_progress = 0.0f,
+    .pressed_progress = 0.0f,
+    .checked = false,
+
+};
 
 char* get_status_text(RPCCState *state) {
     return state->is_rpcc_connected
@@ -362,9 +384,9 @@ void draw_minimized_status(GUIContext *context, RPCCState *state) {
     draw_text(context->font, smoothed_text, (Vector2) { text_x, text_y }, 54, 1.5f, WHITE);
 }
 
-void draw_button_square(GUIContext *context, float x, float y, float size, float stroke_size, Color background, Color background_hover, Color stroke, Color stroke_hover, float *hovering_progress) {
+void draw_button_square(GUIContext *context, Vector2 position, Vector2 size, float stroke_size, Color background, Color background_hover, Color stroke, Color stroke_hover, float *hovering_progress) {
 
-    Rectangle rect = (Rectangle) { x, y, size, size };
+    Rectangle rect = (Rectangle) { position.x, position.y, size.x, size.y };
     Rectangle stroke_rect = rect;
     expand_rectangle(&stroke_rect, stroke_size);
 
@@ -444,7 +466,7 @@ void draw_char_button(GUIContext *context, CharButton *button) {
     float y = button->rect.y + (button->rect.width / 2.0 * invert_ease);
     float size = button->rect.width * ease;
 
-    draw_button_square(context, x, y, size, 5.0, BUTTON_DEFAULT_BACKGROUND, BUTTON_HOVER_BACKGROUND, BUTTON_DEFAULT_STROKE, BUTTON_HOVER_STROKE, &button->hovering_progress);
+    draw_button_square(context, (Vector2) { x, y }, (Vector2) { size, size }, 5.0, BUTTON_DEFAULT_BACKGROUND, BUTTON_HOVER_BACKGROUND, BUTTON_DEFAULT_STROKE, BUTTON_HOVER_STROKE, &button->hovering_progress);
     
     Vector2 text_size = MeasureTextEx(context->font, button->text, 96 * ease, 1.5);
 
@@ -472,14 +494,53 @@ void draw_icon_button(GUIContext *context, IconButton *button) {
     float invert_ease = 1.0 - ease;
 
     float x = button->rect.x + ((button->rect.width / 2.0) * invert_ease);
-    float y = button->rect.y + ((button->rect.width / 2.0) * invert_ease);
+    float y = button->rect.y + ((button->rect.height / 2.0) * invert_ease);
     float size = button->rect.width * ease;
 
-    draw_button_square(context, x, y, size, 5.0, BUTTON_DEFAULT_BACKGROUND, BUTTON_HOVER_BACKGROUND, BUTTON_DEFAULT_STROKE, BUTTON_HOVER_STROKE, &button->hovering_progress);
+    draw_button_square(context, (Vector2) { x, y }, (Vector2) { size, size }, 5.0, BUTTON_DEFAULT_BACKGROUND, BUTTON_HOVER_BACKGROUND, BUTTON_DEFAULT_STROKE, BUTTON_HOVER_STROKE, &button->hovering_progress);
 
     Vector2 icon_position = (Vector2) { x + (button->icon.texture.width / 4.0f) * ease, y + (button->icon.texture.height / 4.0f) * ease };
     draw_icon(context, &button->icon, icon_position, (Vector2) { ease, ease }, WHITE);
 }
+
+void draw_checkbox(GUIContext *context, Checkbox *checkbox, Vector2 size) {
+
+    float ease = EaseCircInOut(checkbox->pressed_progress, 0.0f, 1.0f, 1.0f);
+    float invert_ease = (1.0f - ease);
+
+    Color background_color = (checkbox->checked ? CHECKBOX_PRESSED_BACKGROUND : CHECKBOX_DEFAULT_BACKGROUND );
+    Color hover_background_color = (checkbox->checked ? CHECKBOX_PRESSED_BACKGROUND : CHECKBOX_HOVER_BACKGROUND );
+
+    tick(checkbox->checked, &checkbox->pressed_progress, 5.0f, context->delta);
+    tick(is_mouse_hovers_rect(context, &checkbox->rect), &checkbox->hovering_progress, 5.0f, context->delta);
+
+    Vector2 button_position = (Vector2) { checkbox->rect.x, checkbox->rect.y };
+    Vector2 button_size = (Vector2) { checkbox->rect.width * size.x, checkbox->rect.height * size.y };
+
+    draw_button_square(
+        context, 
+        button_position,
+        button_size,
+        5.0f, 
+        background_color, 
+        hover_background_color, 
+        CHECKBOX_DEFAULT_STROKE, 
+        CHECKBOX_DEFAULT_STROKE,
+        &checkbox->hovering_progress
+    );
+
+    Color icon_color = transform_color(ease, TRANSPARENT, BLACK);
+
+    Vector2 icon_size = (Vector2) { 1.0f, 1.0f };
+    Vector2 icon_position = (Vector2) { 
+        checkbox->rect.x + 15.5f, 
+        checkbox->rect.y + 12.5f
+    };
+
+    draw_icon(context, &checkbox_icon, icon_position, icon_size, icon_color);
+}
+
+
 
 void draw_select_buttons(GUIContext *context) {
 
@@ -642,8 +703,24 @@ void draw_file_open_settings(GUIContext *context) {
         &open_file_input.hovering_progress
     );
 
-    Vector2 icon_position = (Vector2) { open_file_input.rect.x + 15.0f, open_file_input.rect.y + 15.0f };
+    Vector2 icon_position = (Vector2) { open_file_input.rect.x + 15.0f, open_file_input.rect.y + 15.0f * ease };
     draw_icon(context, &open_file_icon, icon_position, (Vector2) { 1, ease }, WHITE);
+
+    Vector2 checkbox_size = (Vector2) { 1.0f, ease };
+    draw_checkbox(context, &as_administrator_checkbox, checkbox_size);
+
+    char as_administrator_text[64];
+    smooth_text(
+        invert_ease,
+        "",
+        "Run as administrator",
+        "",
+        as_administrator_text,
+        sizeof(as_administrator_text)
+    );
+
+    Vector2 text_position = (Vector2) { as_administrator_checkbox.rect.x + as_administrator_checkbox.rect.width + 27.0f, as_administrator_checkbox.rect.y + title_size.y / 2.0f };
+    draw_text(context->font, as_administrator_text, text_position, 54.0f, 1.5f, WHITE);
 }
 
 void draw_configuration_setttings(GUIContext *context) {
@@ -701,7 +778,12 @@ void draw_gui(GUIContext *context, RPCCState *state) {
 
 }
 
+void load_texture(Texture2D *texture, char* path) {
 
+    *texture = LoadTexture(path);
+    SetTextureFilter(*texture, TEXTURE_FILTER_BILINEAR);
+
+}
 
 void load_gui(GUIContext *context) {
 
@@ -714,21 +796,20 @@ void load_gui(GUIContext *context) {
     context->font = LoadFontEx("assets/font.ttf", 96, codepoints, 1300);
     SetTextureFilter(context->font.texture, TEXTURE_FILTER_BILINEAR);
 
-    exit_button.icon.texture = LoadTexture(exit_button.icon.path);
-    SetTextureFilter(exit_button.icon.texture, TEXTURE_FILTER_BILINEAR);
+    load_texture(&exit_button.icon.texture, exit_button.icon.path);
 
     size_t options_size = sizeof(options) / sizeof(ConfigurationOption);
     for (size_t i = 0; i < options_size; i++) {
         ConfigurationOption *option = &options[i];
 
-        option->icon.texture = LoadTexture(option->icon.path);
-        SetTextureFilter(option->icon.texture, TEXTURE_FILTER_BILINEAR);
+        load_texture(&option->icon.texture, option->icon.path);
     }
 
     open_file_input.text = malloc(sizeof(char) * 256);
     strcpy(open_file_input.text, "Path to app");
 
-    open_file_icon.texture = LoadTexture(open_file_icon.path);
+    load_texture(&open_file_icon.texture, open_file_icon.path);
+    load_texture(&checkbox_icon.texture, checkbox_icon.path);
 }
 
 void unload_gui(GUIContext *context) {
@@ -745,6 +826,7 @@ void unload_gui(GUIContext *context) {
     free(open_file_input.text);
 
     UnloadTexture(open_file_icon.texture);
+    UnloadTexture(checkbox_icon.texture);
 }
 
 void render_screen(GUIContext *context, RPCCState *state) {
