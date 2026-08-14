@@ -81,8 +81,6 @@ int is_rpcc_conneceted_to_port(int port_id) {
 
             return -5; // Couldn't read port
         }
-        
-        printf("Read bytes: %d\n", bytes_read);
 
         if (bytes_read == 0) {
             CloseHandle(port);
@@ -98,8 +96,6 @@ int is_rpcc_conneceted_to_port(int port_id) {
 
         return -7; // Ivalid amount of bytes read
     }
-
-    printf("Comparing: %s and %s\n", received_buffer, handshake_message);
 
     if (strcmp(received_buffer, handshake_message) != 0) {
         CloseHandle(port);

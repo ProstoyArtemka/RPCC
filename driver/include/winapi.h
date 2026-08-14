@@ -9,6 +9,8 @@
 #define TRAYICON_CONNECTED_ASSET 201
 #define TRAYICON_DISCONNECTED_ASSET 202
 
+#define MAX_WINDOWS_PATH_LENGTH 260
+
 typedef void (*DEVICE_CONNECTED_CALLBACK) (int);
 typedef void (*DEVICE_DISCONNECTED_CALLBACK) (int);
 typedef void (*TRAY_ICON_CLICKED_CALLBACK) (void);
@@ -43,5 +45,7 @@ void start_ports_scan(DEVICE_CONNECTED_CALLBACK callback);
 void start_com_port_check_thread(int port, int timeout, DEVICE_CONNECTED_CALLBACK callback);
 
 void keep_window_alive();
+
+int open_file_dialog(void* hwnd, char *path, int maxLength);
 
 #endif

@@ -3,8 +3,8 @@
 
 #include <graphics.h>
 
-typedef void (*ButtonCallback) (GUIContext *context, void *data);
+typedef void (*ButtonCallback) (GUIContext *context, Config *config, void *data);
 
-void process_inputs(GUIContext *context, RPCCState *state, Config *config);
+void process_inputs(GUIContext *context, RPCCState *state, Config *config, void* hwnd);
 
 #endif

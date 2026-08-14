@@ -6,6 +6,7 @@
 #include <initguid.h>
 #include <usbiodef.h>
 #include <stdio.h>
+#include <commdlg.h>
 
 #include <uart.h>
 
@@ -21,8 +22,6 @@ void device_connected(HWND window, LPARAM data, DEVICE_CONNECTED_CALLBACK callba
 
     int port_id;
     if (swscanf_s((const wchar_t*) port->dbcp_name, L"COM%d", &port_id) != 1) return;
-
-    printf("Connected new device, Checking COM%d\n", port_id);
 
     start_com_port_check_thread(port_id, 1000, callback); // Some timeout cause nano, I'm thinking about deleting timeout functionality after PCB  will be ready.
 
@@ -229,7 +228,6 @@ DWORD WINAPI ComPortCheckThread(LPVOID params_pointer) {
 
     Sleep(params->timeout);
     int status = is_rpcc_conneceted_to_port(params->port);
-    printf("Status: %d\n", status);
 
     if (status == 1) params->callback(params->port);
 
@@ -267,13 +265,8 @@ void start_ports_scan(DEVICE_CONNECTED_CALLBACK callback) {
 
     ULONG result = GetCommPorts(ports, AMOUNT_OF_COM_PORTS, &ports_found);
     if (result != ERROR_SUCCESS) return;
-
-    printf("Ports found: %d\n", ports_found);
-
     for (int i = 0; i < ports_found; i++) {
         int port = ports[i];
-
-        printf("Scanning port: COM%d\n", port);
 
         start_com_port_check_thread(port, 0, callback);
     }
@@ -288,4 +281,30 @@ void keep_window_alive() {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
 
+}
+
+int open_file_dialog(void *hwnd, char *path, int maxLength) {
+
+    wchar_t file_path[MAX_PATH] = { 0 };
+    OPENFILENAMEW open_file_name;
+    ZeroMemory(&open_file_name, sizeof(open_file_name));
+
+    open_file_name.lStructSize = sizeof(open_file_name);
+    open_file_name.hwndOwner = (HWND) hwnd;
+    open_file_name.lpstrFile = file_path;
+    open_file_name.nMaxFile = sizeof(file_path) / sizeof(wchar_t);
+
+    open_file_name.lpstrFilter = L"All files (*.*)\0*.*\0"; 
+    open_file_name.nFilterIndex = 1;
+    open_file_name.lpstrFileTitle = NULL;
+    open_file_name.nMaxFileTitle = 0;
+    open_file_name.lpstrInitialDir = NULL;
+    open_file_name.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_NODEREFERENCELINKS;
+
+    if (GetOpenFileNameW(&open_file_name) == FALSE)
+        return 0; // Cancelled
+
+    WideCharToMultiByte(CP_UTF8, 0, open_file_name.lpstrFile, -1, path, maxLength, NULL, NULL);
+
+    return 1;
 }

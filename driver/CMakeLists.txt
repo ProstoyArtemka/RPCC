@@ -29,7 +29,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-target_link_libraries(${PROJECT_NAME} raylib comctl32 onecore)
+target_link_libraries(${PROJECT_NAME} raylib comctl32 onecore comdlg32)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

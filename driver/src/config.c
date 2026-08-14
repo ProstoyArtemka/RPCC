@@ -13,7 +13,7 @@ ConfigReadResult read_button_config(FILE *file, ButtonConfig *button_config) {
 
     switch (button_action) {
 
-        case OPEN_APP: {
+        case OPEN_FILE: {
             
             int as_administrator = fgetc(file);
             if (as_administrator == EOF) return CONFIG_READ_ERROR;
@@ -21,15 +21,16 @@ ConfigReadResult read_button_config(FILE *file, ButtonConfig *button_config) {
             int path_size;
             if (fread(&path_size, sizeof(int), 1, file) != 1) return CONFIG_READ_ERROR;
 
-            char *path = malloc(sizeof(char) * path_size);
-            
+            char *path = malloc(sizeof(char) * (path_size + 1));
+            path[path_size] = '\0';
+
             if (fread(path, sizeof(char), path_size, file) != path_size) {
                 free(path);
 
                 return CONFIG_READ_ERROR;
             }
 
-            OpenAppActionData *data = malloc(sizeof(OpenAppActionData));
+            OpenFileActionData *data = malloc(sizeof(OpenFileActionData));
 
             data->as_administrator = as_administrator;
             data->path = path;
@@ -44,9 +45,10 @@ ConfigReadResult read_button_config(FILE *file, ButtonConfig *button_config) {
             int link_size;
             if (fread(&link_size, sizeof(int), 1, file) != 1) return CONFIG_READ_ERROR;
 
-            char *link = malloc(sizeof(char) * link_size);
+            char *link = malloc(sizeof(char) * (link_size + 1));
+            link[link_size] = '\0';
 
-            if (fread(&link, sizeof(char), link_size, file) != link_size) {
+            if (fread(link, sizeof(char), link_size, file) != link_size) {
                 free(link);
 
                 return CONFIG_READ_ERROR;
@@ -66,9 +68,10 @@ ConfigReadResult read_button_config(FILE *file, ButtonConfig *button_config) {
             int script_size;
             if (fread(&script_size, sizeof(int), 1, file) != 1) return CONFIG_READ_ERROR;
 
-            char *script = malloc(sizeof(char) * script_size);
+            char *script = malloc(sizeof(char) * (script_size + 1));
+            script[script_size] = '\0';
 
-            if (fread(&script, sizeof(char), script_size, file) != script_size) {
+            if (fread(script, sizeof(char), script_size, file) != script_size) {
                 free(script);
 
                 return CONFIG_READ_ERROR;
@@ -119,9 +122,9 @@ void save_button_config(FILE *file, ButtonConfig *button_config) {
 
     switch (button_config->action) {
 
-        case OPEN_APP: {
+        case OPEN_FILE: {
 
-            OpenAppActionData *data = (OpenAppActionData*) button_config->action_data;
+            OpenFileActionData *data = (OpenFileActionData*) button_config->action_data;
 
             fputc(data->as_administrator, file);
 
@@ -163,7 +166,7 @@ void save_button_config(FILE *file, ButtonConfig *button_config) {
 ConfigSaveResult save_config(Config *config) {
 
     FILE *file = fopen("./rpcc.config", "wb");
-    if (file == NULL) return CONFIG_READ_ERROR;
+    if (file == NULL) return CONFIG_SAVE_ERROR;
 
     for (size_t i = 0; i < sizeof(config->buttons) / sizeof(ButtonConfig); i++) {
 
@@ -180,7 +183,7 @@ ConfigSaveResult save_config(Config *config) {
 
     fclose(file);
 
-    return CONFIG_READ_SUCCESS;
+    return CONFIG_SAVE_SUCCESS;
 
 }
 
@@ -192,9 +195,9 @@ void unload_config(Config *config) {
 
         switch (button_config->action) {
 
-            case OPEN_APP: {
+            case OPEN_FILE: {
 
-                OpenAppActionData *data = (OpenAppActionData*) button_config->action_data;
+                OpenFileActionData *data = (OpenFileActionData*) button_config->action_data;
                 
                 if (data->path != NULL)
                     free(data->path);

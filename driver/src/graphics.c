@@ -5,8 +5,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <config.h>
+#include <stdlib.h>
 
+#include <config.h>
 #include <inputs.h>
 
 
@@ -63,10 +64,18 @@ IconButton exit_button = (IconButton) {
         .height = 150
     },
     
-    .path = "assets/icons/close.png",
-    .texture = {0},
+    .icon = (Icon) {
+        .rect = (Rectangle) {
+            .x = 0,
+            .y = 0,
+            .width = 100.0f,
+            .height = 100.0f
+        },
 
-    .hovering_progress = 0.
+        .path = "assets/icons/close.png"
+    },
+
+    .hovering_progress = 0.0f
 };
 
 ConfigurationOption options[] = {
@@ -80,8 +89,9 @@ ConfigurationOption options[] = {
             .height = 150.0
         },
 
-        .path = "assets/icons/app.png",
-        .texture = (Texture2D) {0},
+        .icon = (Icon) {
+            .path = "assets/icons/file.png",
+        },
 
         .hovering_progress = 0.0f,
         .press_progress = 0.0f
@@ -97,8 +107,9 @@ ConfigurationOption options[] = {
             .height = 150.0
         },
 
-        .path = "assets/icons/link.png",
-        .texture = (Texture2D) {0},
+        .icon = (Icon) {
+            .path = "assets/icons/link.png",
+        },
 
         .hovering_progress = 0.0f,
         .press_progress = 0.0f
@@ -114,8 +125,9 @@ ConfigurationOption options[] = {
             .height = 150.0
         },
 
-        .path = "assets/icons/wrap.png",
-        .texture = (Texture2D) {0},
+        .icon = (Icon) {
+            .path = "assets/icons/wrap.png",
+        },
 
         .hovering_progress = 0.0f,
         .press_progress = 0.0f
@@ -131,8 +143,9 @@ ConfigurationOption options[] = {
             .height = 150.0
         },
 
-        .path = "assets/icons/cmd.png",
-        .texture = (Texture2D) {0},
+        .icon = (Icon) {
+            .path = "assets/icons/cmd.png",
+        },
 
         .hovering_progress = 0.0f,
         .press_progress = 0.0f
@@ -148,15 +161,45 @@ ConfigurationOption options[] = {
             .height = 150.0
         },
 
-        .path = "assets/icons/nothing.png",
-        .texture = (Texture2D) {0},
-
+        .icon = (Icon) {
+            .path = "assets/icons/nothing.png",
+        },
+ 
         .hovering_progress = 1.0f,
         .press_progress = 1.0f
 
     },
 
 };
+
+TextLineInput open_file_input = (TextLineInput) {
+
+    .rect = (Rectangle) {
+        .x = 297.0f,
+        .y = 449.0f,
+
+        .width = 1325.0f,
+        .height = 100.0f
+    },
+
+    .hovering_progress = 0.0f,
+
+};
+
+Icon open_file_icon = (Icon) {
+
+    .rect = (Rectangle) {
+        .x = 0,
+        .y = 0,
+        .width = 75.0f,
+        .height = 75.0f
+    },
+
+    .path = "assets/icons/add.png"
+
+};
+
+
 
 char* get_status_text(RPCCState *state) {
     return state->is_rpcc_connected
@@ -336,6 +379,62 @@ void draw_button_square(GUIContext *context, float x, float y, float size, float
 
 }
 
+void draw_text_line_input(GUIContext *context, TextLineInput *input, Vector2 position, Vector2 size, float stroke_size, float font_size, float spacing, Color background, Color background_hover, Color stroke, Color stroke_hover, Color text_color, float *hovering_progress) {
+
+    Rectangle input_rect = (Rectangle) {
+        .x = input->rect.x + position.x,
+        .y = input->rect.y + position.y,
+        .width = input->rect.width * size.x,
+        .height = input->rect.height * size.y
+    };
+
+    Rectangle stroke_rect = input_rect;
+    expand_rectangle(&stroke_rect, stroke_size);
+
+    bool is_mouse_hovering = is_mouse_hovers_rect(context, &input_rect);
+    tick(is_mouse_hovering, hovering_progress, 10.0f, context->delta);
+
+    Color background_color = transform_color(*hovering_progress, background, background_hover);
+    Color stroke_color = transform_color(*hovering_progress, stroke, stroke_hover);
+
+    DrawRectangleRounded(stroke_rect, 0.5f, 16, stroke_color);
+    DrawRectangleRounded(input_rect, 0.5f, 16, background_color);
+
+
+    float current_font_size = font_size * size.y;
+    Vector2 text_size = MeasureTextEx(context->font, input->text, current_font_size, spacing);
+    Vector2 dots_size = MeasureTextEx(context->font, "...", current_font_size, 1.5f);
+    
+    float max_width = input->rect.width - 250.0f;
+    bool is_larger_than_box = text_size.x >= max_width;
+
+
+    char *display_text = input->text;
+    if (is_larger_than_box) {
+        
+        while (*display_text != '\0' && text_size.x > max_width) {
+            display_text++;
+
+            text_size = MeasureTextEx(context->font, display_text, current_font_size, spacing);
+        }
+
+        Vector2 dots_position = (Vector2) {
+            input_rect.x + (input_rect.width / 2.0f) - (text_size.x / 2.0f), 
+            input_rect.y + (input_rect.height / 2.0f) - (dots_size.y / 2.0f)
+        };
+
+        draw_text(context->font, "...", dots_position, current_font_size, spacing, text_color);
+    }
+
+    Vector2 text_position = (Vector2) { 
+        input_rect.x + (input_rect.width / 2.0f) - (text_size.x / 2.0f) + (is_larger_than_box ? dots_size.x : 0), 
+        input_rect.y + (input_rect.height / 2.0f) - (text_size.y / 2.0f)
+    };
+
+
+    draw_text(context->font, display_text, text_position, current_font_size, spacing, text_color);
+}
+
 void draw_char_button(GUIContext *context, CharButton *button) {
 
     float ease = EaseCircInOut(context->connected_animation, 0.0f, 1.0f, 1.0f);
@@ -355,6 +454,18 @@ void draw_char_button(GUIContext *context, CharButton *button) {
     draw_text(context->font, button->text, (Vector2) { text_x, text_y }, 96 * ease, 1.5f, WHITE);
 }
 
+void draw_icon(GUIContext *context, Icon *icon, Vector2 position, Vector2 size, Color color) {
+
+    Vector2 icon_position = (Vector2) { position.x + (icon->rect.x), position.y + (icon->rect.y) };
+
+    Rectangle source = { 0.0f, 0.0f, (float) icon->texture.width, (float) icon->texture.height};
+    Rectangle destination = { icon_position.x, icon_position.y, icon->texture.width * size.x, icon->texture.height * size.y };
+
+    Vector2 origin = { 0.0f, 0.0f };
+
+    DrawTexturePro(icon->texture, source, destination, origin, 0.0f, color);
+}
+
 void draw_icon_button(GUIContext *context, IconButton *button) {
 
     float ease = EaseCircInOut(context->configuration_animation, 0.0f, 1.0f, 1.0f);
@@ -366,18 +477,8 @@ void draw_icon_button(GUIContext *context, IconButton *button) {
 
     draw_button_square(context, x, y, size, 5.0, BUTTON_DEFAULT_BACKGROUND, BUTTON_HOVER_BACKGROUND, BUTTON_DEFAULT_STROKE, BUTTON_HOVER_STROKE, &button->hovering_progress);
 
-    Rectangle source = (Rectangle){ 0.0f, 0.0f, (float)button->texture.width, (float)button->texture.height };
-
-    float scaledWidth = (float) button->texture.width * ease;
-    float scaledHeight = (float) button->texture.height * ease;
-
-    float texture_x = button->rect.x + (button->rect.width - scaledWidth) / 2.0f;
-    float texture_y = button->rect.y + (button->rect.height - scaledHeight) / 2.0f;
-
-    Rectangle destination = (Rectangle){ texture_x, texture_y, scaledWidth, scaledHeight };
-    Vector2 origin = (Vector2){ 0.0f, 0.0f };
-
-    DrawTexturePro(button->texture, source, destination, origin, 0.0f, WHITE);
+    Vector2 icon_position = (Vector2) { x + (button->icon.texture.width / 4.0f) * ease, y + (button->icon.texture.height / 4.0f) * ease };
+    draw_icon(context, &button->icon, icon_position, (Vector2) { ease, ease }, WHITE);
 }
 
 void draw_select_buttons(GUIContext *context) {
@@ -473,7 +574,7 @@ void draw_configuration_options(GUIContext *context) {
         ConfigurationOption *option = &options[i];
 
         bool is_hovered = is_mouse_hovers_rect(context, &option->rect);
-        bool is_pressed = context->selected_configuration_option[context->selected_button] == i;
+        bool is_pressed = context->configuration_options[context->current_button] == i;
 
         tick(is_hovered, &option->hovering_progress, 5.0f, context->delta);
         tick(is_pressed, &option->press_progress, 5.0f, context->delta);
@@ -499,18 +600,66 @@ void draw_configuration_options(GUIContext *context) {
 
         }
 
-        Vector2 option_position = (Vector2) { option->rect.x + 50.0 + (50.0 * invert_ease), option->rect.y + 25.0 + (-25.0 * invert_ease) };
+        Vector2 option_position = (Vector2) { option->rect.x + 50.0, option->rect.y + 25.0 * ease };
         Color option_icon_color = transform_color(option->press_progress, WHITE, BLACK);
 
-        DrawTextureEx(option->texture, option_position, 0.0f, ease, option_icon_color);
+        draw_icon(context, &option->icon, option_position, (Vector2) { 1, ease }, option_icon_color);
         
     }
 
 }
 
+void draw_file_open_settings(GUIContext *context) {
+
+    float ease = EaseCircInOut(fmaxf(0.0f, (context->configuration_animation - 0.5f) * 2.0f), 0.0f, 1.0f, 1.0f);
+    float invert_ease = (1.0f - ease);
+
+    if (ease == 0) return;
+
+    char title[] = "Select path to your file";
+    Vector2 title_size = MeasureTextEx(context->font, title, 54.0f * ease, 1.5f);
+    float title_x = (1920.0f / 2.0f) - (title_size.x / 2.0f);
+    float title_y = 376.0f;
+
+    draw_text(context->font, title, (Vector2) { title_x, title_y }, 54.0f * ease, 1.5f, WHITE);
+
+    Vector2 position = (Vector2) {0.0f, 0.0f};
+    Vector2 size = (Vector2) {1, ease};
+
+    draw_text_line_input(
+        context,
+        &open_file_input,
+        position,
+        size,
+        5.0f,
+        54.0f,
+        1.5f,
+        BUTTON_DEFAULT_BACKGROUND,
+        BUTTON_HOVER_BACKGROUND,
+        BUTTON_DEFAULT_STROKE,
+        BUTTON_HOVER_STROKE,
+        BUTTON_DEFAULT_STROKE,
+        &open_file_input.hovering_progress
+    );
+
+    Vector2 icon_position = (Vector2) { open_file_input.rect.x + 15.0f, open_file_input.rect.y + 15.0f };
+    draw_icon(context, &open_file_icon, icon_position, (Vector2) { 1, ease }, WHITE);
+}
+
 void draw_configuration_setttings(GUIContext *context) {
 
+    ButtonAction action = context->configuration_options[context->current_button];
 
+    switch (action) {
+        
+        case OPEN_FILE: {
+
+            draw_file_open_settings(context);
+
+            break;
+        }
+
+    }
 
 }
 
@@ -525,6 +674,7 @@ void draw_gui(GUIContext *context, RPCCState *state) {
         draw_exit_button(context);
 
         draw_configuration_options(context);
+        draw_configuration_setttings(context);
     }
 
     if (!context->is_configuring && context->configuration_animation > 0.0f) {
@@ -534,6 +684,7 @@ void draw_gui(GUIContext *context, RPCCState *state) {
         draw_exit_button(context);
 
         draw_configuration_options(context);
+        draw_configuration_setttings(context);
     }
 
     if (!context->is_configuring && context->configuration_animation == 0.0f) {
@@ -545,7 +696,7 @@ void draw_gui(GUIContext *context, RPCCState *state) {
     if (context->connected_animation != 0) draw_select_buttons(context);
 
     tick(state->is_rpcc_connected && !context->is_configuring, &context->connected_animation, 1.0f, context->delta);
-    tick(context->selected_button != -1, &context->configuration_animation, 1.0f, context->delta);
+    tick(context->is_configuring, &context->configuration_animation, 1.0f, context->delta);
     tick(state->is_rpcc_connected, &context->status_color_animation, 1.0f, context->delta);
 
 }
@@ -557,20 +708,27 @@ void load_gui(GUIContext *context) {
     context->screen_texture = LoadRenderTexture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     SetTextureFilter(context->screen_texture.texture, TEXTURE_FILTER_BILINEAR);
 
-    context->font = LoadFontEx("assets/font.ttf", 96, NULL, 0);
+    int codepoints[1300];
+    for (int i = 0; i < 1300; i++) codepoints[i] = i;
+
+    context->font = LoadFontEx("assets/font.ttf", 96, codepoints, 1300);
     SetTextureFilter(context->font.texture, TEXTURE_FILTER_BILINEAR);
 
-    exit_button.texture = LoadTexture(exit_button.path);
-    SetTextureFilter(exit_button.texture, TEXTURE_FILTER_BILINEAR);
+    exit_button.icon.texture = LoadTexture(exit_button.icon.path);
+    SetTextureFilter(exit_button.icon.texture, TEXTURE_FILTER_BILINEAR);
 
     size_t options_size = sizeof(options) / sizeof(ConfigurationOption);
     for (size_t i = 0; i < options_size; i++) {
         ConfigurationOption *option = &options[i];
 
-        option->texture = LoadTexture(option->path);
-        SetTextureFilter(option->texture, TEXTURE_FILTER_BILINEAR);
+        option->icon.texture = LoadTexture(option->icon.path);
+        SetTextureFilter(option->icon.texture, TEXTURE_FILTER_BILINEAR);
     }
 
+    open_file_input.text = malloc(sizeof(char) * 256);
+    strcpy(open_file_input.text, "Path to app");
+
+    open_file_icon.texture = LoadTexture(open_file_icon.path);
 }
 
 void unload_gui(GUIContext *context) {
@@ -578,11 +736,15 @@ void unload_gui(GUIContext *context) {
     UnloadRenderTexture(context->screen_texture);
     UnloadFont(context->font);
 
-    UnloadTexture(exit_button.texture);
+    UnloadTexture(exit_button.icon.texture);
 
     size_t options_size = sizeof(options) / sizeof(ConfigurationOption);
     for (size_t i = 0; i < options_size; i++)
-        UnloadTexture(options[i].texture);
+        UnloadTexture(options[i].icon.texture);
+
+    free(open_file_input.text);
+
+    UnloadTexture(open_file_icon.texture);
 }
 
 void render_screen(GUIContext *context, RPCCState *state) {

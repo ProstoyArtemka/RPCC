@@ -20,7 +20,7 @@ typedef enum {
 
 typedef enum {
 
-    OPEN_APP,
+    OPEN_FILE,
     OPEN_LINK,
     WRAP_WINDOWS,
     SCRIPT,
@@ -35,7 +35,7 @@ typedef struct {
     char* path;
     int as_administrator;
 
-} OpenAppActionData;
+} OpenFileActionData;
 
 typedef struct {
 

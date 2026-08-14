@@ -35,8 +35,8 @@ GUIContext context = (GUIContext) {
 
     .is_configuring = false,
 
-    .selected_button = -1,
-    .selected_configuration_option = {NOTHING, NOTHING, NOTHING},
+    .current_button = -1,
+    .configuration_options = {NOTHING, NOTHING, NOTHING},
 };
 
 bool is_hidden = false;
@@ -112,16 +112,18 @@ void init_config() {
     ConfigReadResult result = load_config(&config);
     if (result == CONFIG_READ_SUCCESS) {
 
-        for (size_t i = 0; i < sizeof(context.selected_configuration_option) / sizeof(ButtonAction); i++)
-            context.selected_configuration_option[i] = config.buttons[i].action;
+        for (size_t i = 0; i < sizeof(context.configuration_options) / sizeof(ButtonAction); i++)
+            context.configuration_options[i] = config.buttons[i].action;
 
         return;
     }
 
-    if (save_config(&config) == CONFIG_SAVE_ERROR) exit(1);
+    if (save_config(&config) == CONFIG_SAVE_ERROR) exit(-1);
 }
 
 int main(void) {
+
+    TraceLog(LOG_INFO, "Проверка UTF-8 в консоли: %s", "Привет");
 
     init_config();
 
@@ -145,7 +147,7 @@ int main(void) {
             state.is_rpcc_connected = !state.is_rpcc_connected;
         }
 
-        process_inputs(&context, &state, &config);        
+        process_inputs(&context, &state, &config, window);        
         render_screen(&context, &state);
     }
 

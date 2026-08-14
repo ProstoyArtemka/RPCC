@@ -54,8 +54,8 @@ typedef struct {
     float configuration_animation;
     float status_color_animation;
 
-    int selected_button;
-    ButtonAction selected_configuration_option[3];
+    int current_button;
+    ButtonAction configuration_options[3];
 
     char status_text[32];
 
@@ -80,6 +80,14 @@ typedef struct {
     char* path;
     Texture2D texture;
 
+} Icon;
+
+typedef struct {
+
+    Rectangle rect;
+
+    Icon icon;
+
     float hovering_progress;
 
 } IconButton;
@@ -88,19 +96,28 @@ typedef struct {
 
     Rectangle rect;
 
-    char *path;
-    Texture2D texture;
+    Icon icon;
 
     float hovering_progress;
     float press_progress;
 
 } ConfigurationOption;
 
+typedef struct {
+
+    Rectangle rect;
+
+    char *text;
+
+    float hovering_progress;
+
+} TextLineInput;
+
 
 extern CharButton select_buttons[3];
 extern IconButton exit_button;
 extern ConfigurationOption options[5];
-
+extern TextLineInput open_file_input;
 
 bool is_mouse_hovers_rect(GUIContext *context, Rectangle *rectangle);
 
